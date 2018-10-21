@@ -1,0 +1,19 @@
+--[[
+%% properties
+241 sceneActivation
+%% weather
+%% events
+%% globals
+--]]
+
+-- Overstyring på
+if tonumber(fibaro:getValue(241, "sceneActivation")) == 22 then
+	fibaro:setGlobal("Kjellerinngang_aut", "0")
+	fibaro:call(241, "turnOn")
+  fibaro:debug("Overstyring aktiverrt!")
+  
+-- Overstyring av  
+elseif tonumber(fibaro:getValue(241, "sceneActivation")) == 23  then
+	fibaro:setGlobal("Kjellerinngang_aut", "1")
+	fibaro:debug("Overstyring deaktiverrt!")
+end
