@@ -1,1 +1,132 @@
+--[[
+%% properties
+268 value
+%% weather
+%% events
+%% globals
+bevegelseTeller
+--]]
+local bevegelse = 0
+local loop = 0
+
+
+
+
+--[[------------------------------------------------------------------------------
+    Sjekk bevegelse i rom, funksjon
+--]]------------------------------------------------------------------------------
+    
+    local function sjekkBevegelse()
+  
+  
+      if (( tonumber(fibaro:getValue(268, "value")) > 0 )) then
+      return true
+    
+      else
+      return false
+    
+      end
+    end
+----------------------------------------------------------------------------------
+
+
+
+
+--[[------------------------------------------------------------------------------
+    Styr lyset i rom funksjon
+--]]------------------------------------------------------------------------------
+    
+    local function lysStyring()
+  
+  
+     if tonumber(fibaro:getGlobalValue("Kjellerinngang_aut")) == 1 then
+          if tostring(fibaro:getGlobalValue("Modus")) == tostring("HjemmeDag") then
+            fibaro:call(241, "setValue", "80")
+      		fibaro:debug("Modus: HjemmeDag! Setter lys til 80%")
+      
+          elseif tostring(fibaro:getGlobalValue("Modus")) == tostring("HjemmeNatt") then
+            fibaro:call(241, "setValue", "2")
+      		fibaro:debug("Modus: HjemmeNatt! Setter lys til 2%")
+      
+          elseif tostring(fibaro:getGlobalValue("Modus")) == tostring("BorteDag") then
+            fibaro:call(241, "setValue", "80")  
+      		fibaro:debug("Modus: BorteDag! Setter lys til 80%")
+      
+          elseif tostring(fibaro:getGlobalValue("Modus")) == tostring("BorteNatt") then
+            fibaro:call(241, "setValue", "80")
+      		fibaro:debug("Modus: BorteNatt! Setter lys til 80%")
+      
+          elseif tostring(fibaro:getGlobalValue("Modus")) == tostring("FerieDag") then
+            fibaro:call(241, "setValue", "80")
+      		fibaro:debug("Modus: FerieDag! Setter lys til 80%")
+      
+          elseif tostring(fibaro:getGlobalValue("Modus")) == tostring("FerieNatt") then
+            fibaro:call(241, "setValue", "80")
+      		fibaro:debug("Modus: FerieNatt! Setter lys til 80%")
+      
+          else fibaro:debug("FEILMELDING: Ingen modus valgt, setter til HjemmeDag som backup!")
+            fibaro:setGlobal("Modus", "HjemmeDag")
+          end
+    
+     end
+  end
+----------------------------------------------------------------------------------
+
+
+-- Start lyStyring funksjonen umiddelbart ved bevegelse, med mindre lyset allerede er på.
+if (( tonumber(fibaro:getValue(268, "value")) > 0 )) and loop == 0 and tonumber(fibaro:getGlobalValue("Kjellerinngang_aut")) == 1 then
+  fibaro:debug("Bevegelse oppdaget, starter lysstyring")
+  lysStyring()
+  fibaro:setGlobal("bevegelseTeller", "0")
+elseif loop == 1 then
+  fibaro:debug("Loopen kjører allerede")
+elseif tonumber(fibaro:getGlobalValue("Kjellerinngang_aut")) == 0 then
+  fibaro:debug("Overstyring av automatikk er aktivert!")
+elseif tonumber(fibaro:getValue(268, "value")) > 1 then
+  fibaro:debug("Det bl eoppdaget bevegelse, men en av de andre variablene ble ikke riktige...")
+
+ end
+
+
+  
+--[[------------------------------------------------------------------------------
+	Når lyset er på, kjør loop for å sjekke om det fremdeles er bevegelse.
+--]]------------------------------------------------------------------------------
+
+while true do -- Start loop
+  loop = 1
+
+  
+  if sjekkBevegelse() == true then
+    fibaro:debug("Det er fremdeles bevegelse, beholder lyset på inntil videre...")
+    bevegelse = 0
+     
+      
+    -- Hvis det ikke har vært bevegelse denne gang, legg til 1 på "bevegelse" teller.
+  else bevegelse = bevegelse + 1
+    fibaro:debug("Det er nå " .. bevegelse .. " minutter siden bevegelse i rommet.")
+  end
+----------------------------------------------------------------------------------
+  
+  
+  
+  
+--[[------------------------------------------------------------------------------
+	Skru av lyset etter 2 minutter, hvis ikke overstyring har blitt aktivert.
+--]]------------------------------------------------------------------------------
+    
+  if bevegelse >= 2 and tonumber(fibaro:getGlobalValue("Kjellerinngang_aut")) == 1 then
+    fibaro:debug("Det har ikke vært bevegelse på 2 minutter. Skrur av lyset.")
+    fibaro:call(241, "turnOff")
+    loop = 0
+    fibaro:abort()
+  end
+  
+----------------------------------------------------------------------------------
+  
+  
+  
+  loop = 0
+    fibaro:sleep(1*60000) --Sett på pause i 1 minutt
+end -- Avslutt loop
 
